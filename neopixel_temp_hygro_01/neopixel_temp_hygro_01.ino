@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #define NEOPIXEL_INPUT 6
-uint8_t PWR = 255; // intensity: 0..255
+uint8_t PWR = 30; // intensity: 0..255
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -26,7 +26,29 @@ uint32_t yellow = strip.Color(255, 255, 0);
 uint32_t greellow = strip.Color(127, 255, 0);
 uint32_t black = strip.Color(0,0,0);
 
+uint8_t colors[16][3] = {
+  {127, 255, 0}, // temp 0: greellow
+  {127, 255, 0}, // temp 1: greellow
+  {255, 255, 0}, // temp 2: yellow
+  {255, 255, 0}, // temp 3: yellow
+  {255, 127, 0}, // temp 4: orange
+  {255, 127, 0}, // temp 5: orange
+  {255, 0, 0},  // temp 6: red
+  {255, 0, 0},  // temp 7: red
+  {0, 0, 255},  // hygro 7: blue
+  {0, 0, 255},  // hygro 6: blue
+  {0, 0, 255},  // hygro 5: blue
+  {0, 255, 255}, // hygro 4: cyan
+  {0, 255, 255}, // hygro 3: cyan
+  {255, 0, 255}, // hygro 2: magenta
+  {255, 0, 255}, // hygro 1: magenta
+  {255, 0, 255}  // hygro 0: magenta
+};
+
+
+
 int anim = 70;
+int fade_time = 70;
 
 // actual values are stored here
 uint8_t hygro;
@@ -62,9 +84,6 @@ void displayOff() {
 }
 
 void lightPixels() {
-  blackOut();
-  delay(anim);
-  
   for (uint8_t i = 0; i<8; i++) {
     bool hygroOn = (i*10 < hygro) || i == 0;
     bool tempOn = (i < temp-18) || i == 0;
@@ -82,13 +101,7 @@ void setHygroPixel(uint8_t v, bool on) {
   uint8_t i = 15 - v;
   
   if (on) {
-    if (v < 3) {
-      strip.setPixelColor(i, magenta);
-    } else if (v < 5) {
-      strip.setPixelColor(i, cyan);
-    } else {
-      strip.setPixelColor(i, blue);
-    }
+    strip.setPixelColor(i, strip.Color(colors[i][0], colors[i][1], colors[i][2]));
   } else {
     strip.setPixelColor(i, black); 
   }
@@ -98,15 +111,7 @@ void setTempPixel(uint8_t i, bool on) {
   i = constrain(i, 0, 7);
 
   if (on) {
-    if (i < 2) {
-      strip.setPixelColor(i, greellow);
-    } else if (i < 4) {
-      strip.setPixelColor(i, yellow);
-    } else if (i < 6) {
-      strip.setPixelColor(i, orange);
-    } else {
-      strip.setPixelColor(i, red);
-    }
+    strip.setPixelColor(i, strip.Color(colors[i][0], colors[i][1], colors[i][2]));
   } else {
     strip.setPixelColor(i, black); 
   }
