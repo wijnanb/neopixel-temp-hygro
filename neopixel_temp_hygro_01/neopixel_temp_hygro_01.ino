@@ -25,25 +25,42 @@ uint32_t orange = strip.Color(PWR, floor(PWR/2), 0);
 uint32_t yellow = strip.Color(PWR, PWR, 0);
 uint32_t black = strip.Color(0,0,0);
 
+int anim = 70;
+
 // actual values are stored here
 uint8_t hygro;
 uint8_t temp;
+
+int cycle_count;
 
 void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  hygro = 0;
+  hygro = 31;
+  displayOn();
 }
 
 void loop() {
-  lightHygroPixels();
+  
+}
+
+void displayOn() {
+   lightHygroPixels();
+   blinkActivePixelsAndDisplayOff(5000);
+}
+
+void displayOff() {
+  blackOut();
+  
+  // listen for button press 
   delay(2000);
+  displayOn();
 }
 
 void lightHygroPixels() {
   blackOut();
-  delay(50);
+  delay(anim);
   
   for (uint8_t i = 0; i<8; i++) {
      if (i*10 < hygro) {
@@ -54,7 +71,7 @@ void lightHygroPixels() {
         setHygroPixel(i, false); 
      }
      strip.show();
-     delay(50);
+     delay(anim);
   }
 }
 
@@ -73,6 +90,25 @@ void setHygroPixel(uint8_t v, bool on) {
   } else {
     strip.setPixelColor(i, black); 
   }
+}
+
+void blinkActivePixelsAndDisplayOff(int duration) {
+   int cycle = 350;
+   
+   uint8_t activeHygroPixel = constrain(floor((hygro-1)/10), 0, 7);
+   
+   cycle_count = 0;
+   while (cycle_count*cycle*2 < duration) {
+     setHygroPixel(activeHygroPixel, false);
+     strip.show();
+     delay(cycle);
+     setHygroPixel(activeHygroPixel, true);
+     strip.show();
+     delay(cycle);
+     cycle_count++;  
+   }
+   
+   displayOff();
 }
 
 void blackOut() {
