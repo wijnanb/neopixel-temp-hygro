@@ -23,13 +23,14 @@ uint32_t blue = strip.Color(0, 0, PWR);
 uint32_t red = strip.Color(PWR, 0, 0);
 uint32_t orange = strip.Color(PWR, floor(PWR/2), 0);
 uint32_t yellow = strip.Color(PWR, PWR, 0);
+uint32_t greellow = strip.Color(floor(PWR/2), PWR, 0);
 uint32_t black = strip.Color(0,0,0);
 
 int anim = 70;
 
 // actual values are stored here
 uint8_t hygro;
-uint8_t temp;
+float temp;
 
 int cycle_count;
 
@@ -37,7 +38,8 @@ void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   
-  hygro = 31;
+  hygro = 63;
+  temp = 20.0;
   displayOn();
 }
 
@@ -46,7 +48,7 @@ void loop() {
 }
 
 void displayOn() {
-   lightHygroPixels();
+   lightPixels();
    blinkActivePixelsAndDisplayOff(5000);
 }
 
@@ -58,20 +60,19 @@ void displayOff() {
   displayOn();
 }
 
-void lightHygroPixels() {
+void lightPixels() {
   blackOut();
   delay(anim);
   
   for (uint8_t i = 0; i<8; i++) {
-     if (i*10 < hygro) {
-        setHygroPixel(i, true);
-     } else if (i == 0) {
-       setHygroPixel(i, true); // always turn on the lowest pixel
-     } else {
-        setHygroPixel(i, false); 
-     }
-     strip.show();
-     delay(anim);
+    bool hygroOn = (i*10 < hygro) || i == 0;
+    bool tempOn = (i < temp-18) || i == 0;
+    
+    setHygroPixel(i, hygroOn);
+    setTempPixel(i, tempOn);
+    
+    strip.show();
+    delay(anim);
   }
 }
 
@@ -92,17 +93,38 @@ void setHygroPixel(uint8_t v, bool on) {
   }
 }
 
+void setTempPixel(uint8_t i, bool on) {
+  i = constrain(i, 0, 7);
+
+  if (on) {
+    if (i < 2) {
+      strip.setPixelColor(i, greellow);
+    } else if (i < 4) {
+      strip.setPixelColor(i, yellow);
+    } else if (i < 6) {
+      strip.setPixelColor(i, orange);
+    } else {
+      strip.setPixelColor(i, red);
+    }
+  } else {
+    strip.setPixelColor(i, black); 
+  }
+}
+
 void blinkActivePixelsAndDisplayOff(int duration) {
    int cycle = 350;
    
    uint8_t activeHygroPixel = constrain(floor((hygro-1)/10), 0, 7);
+   uint8_t activeTempPixel = constrain(floor((temp-1)-18), 0, 7);
    
    cycle_count = 0;
    while (cycle_count*cycle*2 < duration) {
      setHygroPixel(activeHygroPixel, false);
+     setTempPixel(activeTempPixel, false);
      strip.show();
      delay(cycle);
      setHygroPixel(activeHygroPixel, true);
+     setTempPixel(activeTempPixel, true);
      strip.show();
      delay(cycle);
      cycle_count++;  
