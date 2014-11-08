@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #define NEOPIXEL_INPUT 6
-uint8_t PWR = 28; // intensity: 0..255
+uint8_t PWR = 255; // intensity: 0..255
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -17,13 +17,13 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(16, NEOPIXEL_INPUT, NEO_GRB + NEO_KH
 // and minimize distance between Arduino and first pixel.  Avoid connecting
 // on a live circuit...if you must, connect GND first.
 
-uint32_t magenta = strip.Color(PWR, 0, PWR);
-uint32_t cyan = strip.Color(0, PWR, PWR);
-uint32_t blue = strip.Color(0, 0, PWR);
-uint32_t red = strip.Color(PWR, 0, 0);
-uint32_t orange = strip.Color(PWR, floor(PWR/2), 0);
-uint32_t yellow = strip.Color(PWR, PWR, 0);
-uint32_t greellow = strip.Color(floor(PWR/2), PWR, 0);
+uint32_t magenta = strip.Color(255, 0, 255);
+uint32_t cyan = strip.Color(0, 255, 255);
+uint32_t blue = strip.Color(0, 0, 255);
+uint32_t red = strip.Color(255, 0, 0);
+uint32_t orange = strip.Color(255, 127, 0);
+uint32_t yellow = strip.Color(255, 255, 0);
+uint32_t greellow = strip.Color(127, 255, 0);
 uint32_t black = strip.Color(0,0,0);
 
 int anim = 70;
@@ -36,10 +36,11 @@ int cycle_count;
 
 void setup() {
   strip.begin();
+  strip.setBrightness(PWR);
   strip.show(); // Initialize all pixels to 'off'
   
-  hygro = 63;
-  temp = 20.0;
+  hygro = 100;
+  temp = 30.0;
   displayOn();
 }
 
