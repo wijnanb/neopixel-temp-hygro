@@ -4,7 +4,7 @@
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
 
-#define DEMO 1
+#define DEMO 0
 
 int ledState = HIGH;
 int buttonState;
@@ -58,8 +58,6 @@ uint8_t colors[16][3] = {
   {255, 0, 255}  // hygro 0: magenta
 };
 
-
-
 int anim = 70;
 int fade_time = 70;
 
@@ -68,7 +66,9 @@ uint8_t hygro;
 float temp;
 
 int cycle_count;
-int same_color_index = 0;
+int same_color_index = -1;
+bool countdown_mode = false;
+bool receiving_input = true;
 
 void setup() {
   randomSeed(analogRead(0));
@@ -81,8 +81,12 @@ void setup() {
   strip.show(); // Initialize all pixels to 'off'
   
   if (DEMO) {
-    setRandomValues();
-    displayOn();
+    if (countdown_mode) {
+      enterCountdownMode();
+    } else {
+      setRandomValues();
+      displayOn();
+    }
   }
 }
 
@@ -134,17 +138,24 @@ void onButtonUp() {
 }
 
 void onShortButtonPress() {
-   setRandomValues();
-   displayOn();
+  if (countdown_mode) {
+    onCountdownShortButtonPress();
+  } else {
+    setRandomValues();
+    displayOn();
+  }
 }
 
 void onLongButtonPress() {
-   int pixels[1] = {7}; // red
-   fadeIn(pixels, 1, 1);
-   fadeOut(pixels, 1, 1);
+  if (countdown_mode) {
+    onCountdownLongButtonPress();
+  } else {
+    enterCountdownMode();
+  }
 }
 
 void displayOn() {
+   receiving_input = false;
    lightPixels();
    blinkActivePixelsAndDisplayOff(3000);
 }
@@ -152,8 +163,10 @@ void displayOn() {
 void displayOff() {
   blackOut();
   
+  receiving_input = true;
+  
   if (DEMO) {
-    delay(1000);
+    delayWithInput(3000);
     setRandomValues();
     displayOn();
   } else {
@@ -188,28 +201,32 @@ bool isTempOn(int i) {
 }
 
 bool isOn(int i) {
-  i = constrain(i, 0, 15);
-  
-  if (i > 7) {
-    return isHygroOn(15-i);
+  if (countdown_mode) {
+    return true;
   } else {
-    return isTempOn(i);
+    i = constrain(i, 0, 15);
+    
+    if (i > 7) {
+      return isHygroOn(15-i);
+    } else {
+      return isTempOn(i);
+    }
   }
 }
 
 void blinkActivePixelsAndDisplayOff(int duration) {
-   int cycle = 350;
    
    uint8_t activeHygroPixel = 15 - constrain(floor((hygro-1)/10), 0, 7);
    uint8_t activeTempPixel = constrain(floor((temp-1)-18), 0, 7);
+   int pixels[2] = {activeHygroPixel, activeTempPixel};
    
+   int cycle = 350;  
    cycle_count = 0;
    while (cycle_count*cycle*2 < duration) {
-     int pixels[2] = {activeHygroPixel, activeTempPixel};
      fadeOut(pixels, 2, 2);
-     delay(30);
+     delayWithInput(30);
      fadeIn(pixels, 2, 1);
-     delay(180);
+     delayWithInput(180);
      cycle_count++;  
    }
    
@@ -220,7 +237,13 @@ void blackOut() {
   delay(50);
   
   int pixels[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-  fadeOut(pixels, strip.numPixels(), int 2) 
+  fadeOut(pixels, strip.numPixels(), 2);
+  off();
+}
+
+void off() {
+  strip.begin();
+  //strip.setPixelColor(p, strip.Color(r, g, b));
 }
 
 void fadeIn(int pixels[], int numPixels, int d) {
@@ -275,12 +298,19 @@ void fade(bool in, int pixels[], int numPixels, int d) {
       }
     }
     strip.show();
-    delay(d);
+    delayWithInput(d);
   }
 }
 
 void setRandomValues() {
   hygro = random(0, 90); // 0..90
   temp = random(180, 260) / 10; // 18.0..26.0
+}
+
+void delayWithInput(int d) {
+   for (int i=0; i<d; i++) {
+     readButtonInput();
+     delay(1);
+   } 
 }
 
