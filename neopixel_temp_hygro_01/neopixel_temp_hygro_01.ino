@@ -57,12 +57,13 @@ float temp;
 int cycle_count;
 
 void setup() {
+  randomSeed(analogRead(0));
+  
   strip.begin();
   strip.setBrightness(PWR);
   strip.show(); // Initialize all pixels to 'off'
   
-  hygro = 100;
-  temp = 30.0;
+  setRandomValues();
   displayOn();
 }
 
@@ -80,19 +81,41 @@ void displayOff() {
   
   // listen for button press 
   delay(2000);
+  setRandomValues();
   displayOn();
 }
 
 void lightPixels() {
   for (uint8_t i = 0; i<8; i++) {
-    bool hygroOn = (i*10 < hygro) || i == 0;
-    bool tempOn = (i < temp-18) || i == 0;
+    
+    bool hygroOn = isHygroOn(i);
+    bool tempOn = isTempOn(i);
     
     setHygroPixel(i, hygroOn);
     setTempPixel(i, tempOn);
     
     strip.show();
     delay(anim);
+  }
+}
+
+bool isHygroOn(int i) {
+  i = constrain(i, 0, 7);
+  return (i*10 < hygro) || i == 0;
+}
+
+bool isTempOn(int i) {
+  i = constrain(i, 0, 7);
+  return (i < temp-18) || i == 0;
+}
+
+bool isOn(int i) {
+  i = constrain(i, 0, 15);
+  
+  if (i > 7) {
+    return isHygroOn(15-i);
+  } else {
+    return isTempOn(i);
   }
 }
 
@@ -174,14 +197,21 @@ void blackOut() {
   // fadeout
   for (int f = 0; f<256; f++) {
     for(uint16_t i=0; i<strip.numPixels(); i++) {
-       r = max(0, colors[i][0] - f);
-       g = max(0, colors[i][1] - f);
-       b = max(0, colors[i][2] - f);
-       strip.setPixelColor(i, strip.Color(r, g, b));
+      if (isOn(i)) {
+         r = max(0, colors[i][0] - f);
+         g = max(0, colors[i][1] - f);
+         b = max(0, colors[i][2] - f);
+         strip.setPixelColor(i, strip.Color(r, g, b));
+      }
      }
      
      strip.show();
      delay(2);
   }
+}
+
+void setRandomValues() {
+  hygro = random(0, 90); // 0..90
+  temp = random(180, 260) / 10; // 18.0..26.0
 }
 
