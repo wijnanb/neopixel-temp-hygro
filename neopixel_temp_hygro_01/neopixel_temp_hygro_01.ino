@@ -73,29 +73,44 @@ void loop() {
 
 void displayOn() {
    lightPixels();
-   blinkActivePixelsAndDisplayOff(5000);
+   blinkActivePixelsAndDisplayOff(3000);
 }
 
 void displayOff() {
   blackOut();
   
   // listen for button press 
-  delay(2000);
+  delay(1000);
   setRandomValues();
   displayOn();
 }
 
 void lightPixels() {
+  // animate from 0 to 8
   for (uint8_t i = 0; i<8; i++) {
     
-    bool hygroOn = isHygroOn(i);
-    bool tempOn = isTempOn(i);
+    // fadein
+    for (int f = 0; f<256; f+=5) {
+       //temp
+       if (isTempOn(i)) {
+         uint8_t r = min(colors[i][0]*f/255, colors[i][0]);
+         uint8_t g = min(colors[i][1]*f/255, colors[i][1]);
+         uint8_t b = min(colors[i][2]*f/255, colors[i][2]);
+         strip.setPixelColor(i, strip.Color(r, g, b));
+       }
+       
+       //hygro
+       if (isHygroOn(i)) {
+         uint8_t r = min(colors[15-i][0]*f/255, colors[15-i][0]);
+         uint8_t g = min(colors[15-i][1]*f/255, colors[15-i][1]);
+         uint8_t b = min(colors[15-i][2]*f/255, colors[15-i][2]);
+         strip.setPixelColor(15-i, strip.Color(r, g, b));
+       }
+       
+       strip.show();
+       delay(1);
+     }
     
-    setHygroPixel(i, hygroOn);
-    setTempPixel(i, tempOn);
-    
-    strip.show();
-    delay(anim);
   }
 }
 
@@ -198,9 +213,9 @@ void blackOut() {
   for (int f = 0; f<256; f++) {
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       if (isOn(i)) {
-         r = max(0, colors[i][0] - f);
-         g = max(0, colors[i][1] - f);
-         b = max(0, colors[i][2] - f);
+         r = max(0, colors[i][0] - colors[i][0]*f/255);
+         g = max(0, colors[i][1] - colors[i][1]*f/255);
+         b = max(0, colors[i][2] - colors[i][2]*f/255);
          strip.setPixelColor(i, strip.Color(r, g, b));
       }
      }
