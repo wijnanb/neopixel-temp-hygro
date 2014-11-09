@@ -1,6 +1,7 @@
 
 int minutes;
 bool interrupted = false;
+bool activate_exit = false;
 
 void enterCountdownMode() {
   countdown_mode = true;
@@ -30,6 +31,7 @@ void displayMinutes() {
   
   // blink active until interrupted
   interrupted = false;
+  activate_exit = true;
   int blink_pixels[1] = {activePixel};
   while (!interrupted) {
      fadeOut(blink_pixels, 1, 2);
@@ -37,20 +39,23 @@ void displayMinutes() {
      fadeIn(blink_pixels, 1, 1);
      delayWithInput(180); 
    }
+   
+   off();
+   same_color_index = -1;
+   countdown_mode = false;
 }
 
 void onCountdownShortButtonPress() {
-  addMinute();
+  if (countdown_mode) {
+    addMinute();
+  }
 }
 
 void onCountdownLongButtonPress() {
-  interrupted = true;
-  /*
-  interrupted = true;
-  countdown_mode = false;
-  same_color_index = -1;
-  displayOn();
-  */
+  if (activate_exit) {
+    activate_exit = false;
+    interrupted = true;
+  }
 }
 
 void addMinute() {

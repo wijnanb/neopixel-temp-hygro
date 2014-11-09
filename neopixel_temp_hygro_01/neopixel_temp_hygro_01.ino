@@ -245,8 +245,10 @@ void blackOut() {
 }
 
 void off() {
-  strip.begin();
-  //strip.setPixelColor(p, strip.Color(r, g, b));
+  for (int i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, black);
+  }
+  strip.show();
 }
 
 void fadeIn(int pixels[], int numPixels, int d) {
