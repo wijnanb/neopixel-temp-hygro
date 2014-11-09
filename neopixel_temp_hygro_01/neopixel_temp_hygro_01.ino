@@ -150,39 +150,39 @@ void blinkActivePixelsAndDisplayOff(int duration) {
    while (cycle_count*cycle*2 < duration) {
      // fadeout
      for (int i = 0; i<256; i++) {
-       uint8_t r_hygro = max(0, colors[activeHygroPixel][0] - i);
-       uint8_t g_hygro = max(0, colors[activeHygroPixel][1] - i);
-       uint8_t b_hygro = max(0, colors[activeHygroPixel][2] - i);
+       uint8_t r_hygro = max(0, colors[activeHygroPixel][0] - colors[activeHygroPixel][0]*i/255);
+       uint8_t g_hygro = max(0, colors[activeHygroPixel][1] - colors[activeHygroPixel][1]*i/255);
+       uint8_t b_hygro = max(0, colors[activeHygroPixel][2] - colors[activeHygroPixel][2]*i/255);
        strip.setPixelColor(activeHygroPixel, strip.Color(r_hygro, g_hygro, b_hygro));
        
-       uint8_t r_temp = max(0, colors[activeTempPixel][0] - i);
-       uint8_t g_temp = max(0, colors[activeTempPixel][1] - i);
-       uint8_t b_temp = max(0, colors[activeTempPixel][2] - i);
+       uint8_t r_temp = max(0, colors[activeTempPixel][0] - colors[activeTempPixel][0]*i/255);
+       uint8_t g_temp = max(0, colors[activeTempPixel][1] - colors[activeTempPixel][1]*i/255);
+       uint8_t b_temp = max(0, colors[activeTempPixel][2] - colors[activeTempPixel][2]*i/255);
        strip.setPixelColor(activeTempPixel, strip.Color(r_temp, g_temp, b_temp));
        
        strip.show();
-       delay(1);
+       delay(2);
      }
      
      delay(30);
      
      // fadein
      for (int i = 0; i<256; i++) {
-       uint8_t r_hygro = min(i, colors[activeHygroPixel][0]);
-       uint8_t g_hygro = min(i, colors[activeHygroPixel][1]);
-       uint8_t b_hygro = min(i, colors[activeHygroPixel][2]);
+       uint8_t r_hygro = min(colors[activeHygroPixel][0]*i/255, colors[activeHygroPixel][0]);
+       uint8_t g_hygro = min(colors[activeHygroPixel][1]*i/255, colors[activeHygroPixel][1]);
+       uint8_t b_hygro = min(colors[activeHygroPixel][2]*i/255, colors[activeHygroPixel][2]);
        strip.setPixelColor(activeHygroPixel, strip.Color(r_hygro, g_hygro, b_hygro));
        
-       uint8_t r_temp = min(i, colors[activeTempPixel][0]);
-       uint8_t g_temp = min(i, colors[activeTempPixel][1]);
-       uint8_t b_temp = min(i, colors[activeTempPixel][2]);
+       uint8_t r_temp = min(colors[activeTempPixel][0]*i/255, colors[activeTempPixel][0]);
+       uint8_t g_temp = min(colors[activeTempPixel][1]*i/255, colors[activeTempPixel][1]);
+       uint8_t b_temp = min(colors[activeTempPixel][2]*i/255, colors[activeTempPixel][2]);
        strip.setPixelColor(activeTempPixel, strip.Color(r_temp, g_temp, b_temp));
        
        strip.show();
        delay(1);
      }
      
-     delay(30);
+     delay(180);
      
      cycle_count++;  
    }
