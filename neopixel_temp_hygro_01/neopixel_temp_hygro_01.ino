@@ -4,6 +4,14 @@
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
 
+#define DEMO 0
+
+int ledState = HIGH;
+int buttonState;
+int lastButtonState = LOW;
+long lastDebounceTime = 0;
+long debounceDelay = 50;
+
 uint8_t PWR = 30; // intensity: 0..255
 
 // Parameter 1 = number of pixels in strip
@@ -69,11 +77,44 @@ void setup() {
   strip.setBrightness(PWR);
   strip.show(); // Initialize all pixels to 'off'
   
-  setRandomValues();
-  displayOn();
+  if (DEMO) {
+    setRandomValues();
+    displayOn();
+  }
 }
 
 void loop() {
+  readButtonInput();
+}
+
+void readButtonInput() {
+  int reading = digitalRead(BUTTON_PIN);
+  
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  } 
+  
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != buttonState) {
+      buttonState = reading;
+      if (buttonState == HIGH) {
+        digitalWrite(BUTTON_LED_PIN, HIGH);
+      } else {
+        digitalWrite(BUTTON_LED_PIN, LOW);
+      }
+    }
+  }
+  
+  
+  lastButtonState = reading; 
+}
+
+void onShortButtonPress() {
+  ledState = !ledState;
+  digitalWrite(BUTTON_LED_PIN, ledState);
+}
+
+void onLongButtonPress() {
   
 }
 
@@ -85,10 +126,13 @@ void displayOn() {
 void displayOff() {
   blackOut();
   
-  // listen for button press 
-  delay(1000);
-  setRandomValues();
-  displayOn();
+  if (DEMO) {
+    delay(1000);
+    setRandomValues();
+    displayOn();
+  } else {
+     // listen for button press in loop
+  }
 }
 
 void lightPixels() {
