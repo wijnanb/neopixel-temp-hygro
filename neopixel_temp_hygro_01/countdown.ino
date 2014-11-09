@@ -2,47 +2,50 @@
 int minutes;
 bool interrupted = false;
 bool activate_exit = false;
+bool ripple_count;
+long end_time;
 
 void enterCountdownMode() {
   countdown_mode = true;
-  same_color_index = 2;
-   // animate from 0 to 16
-  for (uint8_t i = 0; i<16; i++) {  
-    int pixels[1] = {i};
-    fadeIn(pixels, 1, -5);
-  } 
+  same_color_index = random(16);
   
-  for (uint8_t i = 1; i<16; i++) {  
-    int pixels[1] = {i};
-    fadeOut(pixels, 1, -5);
-  }
+  ripple();
   
-  minutes = 1;
-  displayMinutes();
+  minutes = 0;
+  addMinute();
+  addMinute();
+  addMinute();
+  addMinute();
 }
 
-void displayMinutes() {
-  same_color_index = 2;
+void startTimer() {
+  end_time = millis() + minutes*3*1000;
+  
   for (uint8_t i = 0; i<constrain(minutes-1, 0, 16); i++) {  
     strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
   }
   
-  int activePixel = constrain((minutes-1), 0, 15);
+  
   
   // blink active until interrupted
   interrupted = false;
   activate_exit = true;
-  int blink_pixels[1] = {activePixel};
+  
   while (!interrupted) {
-     fadeOut(blink_pixels, 1, 2);
-     delayWithInput(30);
-     fadeIn(blink_pixels, 1, 1);
-     delayWithInput(180); 
-   }
+    int activePixel = constrain((minutes-1), 0, 15);
+    int blink_pixels[1] = {activePixel};
+    
+    fadeOut(blink_pixels, 1, 2);
+    delayWithInput(30);
+    fadeIn(blink_pixels, 1, 1);
+    delayWithInput(180); 
+     
+    //checkTime();
+  }
    
-   off();
-   same_color_index = -1;
-   countdown_mode = false;
+  off();
+  same_color_index = -1;
+  countdown_mode = false;
 }
 
 void onCountdownShortButtonPress() {
@@ -60,5 +63,60 @@ void onCountdownLongButtonPress() {
 
 void addMinute() {
   minutes = constrain(minutes+1, 1, 16);
-  displayMinutes();
+  startTimer();
+}
+
+void checkTime() {
+  if (end_time != 0) {
+     if (end_time < millis()) {
+        // alarm!
+        end_time = 0;
+        interrupted = true;
+        ripple();
+     } else {
+       minutes = ceil((end_time - millis())/3*1000);
+     }
+  }
+}
+
+void ripple() {
+  int d = -25;
+  int passes = 5;
+  int max_length = 10;
+  
+  int pixels[1] = {3};
+  fadeIn(0, 1, d);
+  
+  int l = 1;
+  int pos = 3;
+  bool grow = true;
+  bool shrink = false;
+  for (int i=0; i<61; i++) {    
+     if (grow) {
+       int grow_pixels[1] = {(pos + l) % 16}; 
+       fadeIn(grow_pixels, 1, d);
+       l++;
+     } else {
+       int move_pixels[1] = {pos % 16}; 
+       fadeOut(move_pixels, 1, d);
+       
+       int grow_pixels[1] = {(pos + l) %16}; 
+       fadeIn(grow_pixels, 1, d);
+       pos++;
+     }
+     
+     if (i%7 == 0 && i!= 0) {
+       grow = true;
+     } else {
+       grow = false;
+     }
+  }
+  
+  
+  for (int i=0; i<9; i++) {    
+    int out_pixels[1] = {7 + i}; 
+    fadeOut(out_pixels, 1, floor(d/2));
+  }
+  
+  off();
 }

@@ -4,7 +4,7 @@
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
 
-#define DEMO 0
+#define DEMO 1
 
 int ledState = HIGH;
 int buttonState;
@@ -14,7 +14,7 @@ long debounceDelay = 50;
 long buttonDownTime = 0;
 long longPressTime = 1000;
 
-uint8_t PWR = 30; // intensity: 0..255
+uint8_t PWR = 20; // intensity: 0..255
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -67,10 +67,11 @@ float temp;
 
 int cycle_count;
 int same_color_index = -1;
-bool countdown_mode = false;
+bool countdown_mode = true;
 bool receiving_input = true;
 
 void setup() {
+  Serial.begin(9600);
   randomSeed(analogRead(0));
   
   pinMode(BUTTON_PIN, INPUT);
