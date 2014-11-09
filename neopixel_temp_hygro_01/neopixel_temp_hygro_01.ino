@@ -4,7 +4,7 @@
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
 
-#define DEMO 0
+#define DEMO 1
 
 int ledState = HIGH;
 int buttonState;
@@ -68,6 +68,7 @@ uint8_t hygro;
 float temp;
 
 int cycle_count;
+int same_color_index = 0;
 
 void setup() {
   randomSeed(analogRead(0));
@@ -133,13 +134,12 @@ void onButtonUp() {
 }
 
 void onShortButtonPress() {
-   int pixels[1] = {7}; //red
-   fadeIn(pixels, 1, 1);
-   fadeOut(pixels, 1, 1);
+   setRandomValues();
+   displayOn();
 }
 
 void onLongButtonPress() {
-   int pixels[1] = {8}; // blue
+   int pixels[1] = {7}; // red
    fadeIn(pixels, 1, 1);
    fadeOut(pixels, 1, 1);
 }
@@ -219,21 +219,8 @@ void blinkActivePixelsAndDisplayOff(int duration) {
 void blackOut() {
   delay(50);
   
-  uint8_t r, g, b;
-  // fadeout
-  for (int f = 0; f<256; f++) {
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      if (isOn(i)) {
-         r = max(0, colors[i][0] - colors[i][0]*f/255);
-         g = max(0, colors[i][1] - colors[i][1]*f/255);
-         b = max(0, colors[i][2] - colors[i][2]*f/255);
-         strip.setPixelColor(i, strip.Color(r, g, b));
-      }
-     }
-     
-     strip.show();
-     delay(2);
-  }
+  int pixels[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  fadeOut(pixels, strip.numPixels(), int 2) 
 }
 
 void fadeIn(int pixels[], int numPixels, int d) {
@@ -248,6 +235,9 @@ void fade(bool in, int pixels[], int numPixels, int d) {
   uint8_t r;
   uint8_t g;
   uint8_t b;
+  uint8_t r_base;
+  uint8_t g_base;
+  uint8_t b_base;
   int inc;
   
   if (d < 0) {
@@ -259,17 +249,30 @@ void fade(bool in, int pixels[], int numPixels, int d) {
   
   for (int f=0; f<256; f+=inc) {
     for (int i=0; i<numPixels; i++) {
-      int p = pixels[i];
-      if (in) {
-        r = min(colors[p][0]*f/255, colors[p][0]);
-        g = min(colors[p][1]*f/255, colors[p][1]);
-        b = min(colors[p][2]*f/255, colors[p][2]);
-      } else {
-        r = max(0, colors[p][0] - colors[p][0]*f/255);
-        g = max(0, colors[p][1] - colors[p][1]*f/255);
-        b = max(0, colors[p][2] - colors[p][2]*f/255);
+      if (isOn(i)) {
+        int p = pixels[i];
+        
+        if (same_color_index == -1) {
+          r_base = colors[p][0];
+          g_base = colors[p][1];
+          b_base = colors[p][2];
+        } else {
+          r_base = colors[same_color_index][0];
+          g_base = colors[same_color_index][1];
+          b_base = colors[same_color_index][2];
+        }
+        
+        if (in) {
+          r = min(r_base*f/255, r_base);
+          g = min(g_base*f/255, g_base);
+          b = min(b_base*f/255, b_base);
+        } else {
+          r = max(0, r_base - r_base*f/255);
+          g = max(0, g_base - g_base*f/255);
+          b = max(0, b_base - b_base*f/255);
+        }
+        strip.setPixelColor(p, strip.Color(r, g, b));
       }
-      strip.setPixelColor(p, strip.Color(r, g, b));
     }
     strip.show();
     delay(d);
