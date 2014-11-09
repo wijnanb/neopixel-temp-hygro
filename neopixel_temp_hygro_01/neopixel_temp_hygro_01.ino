@@ -11,6 +11,8 @@ int buttonState;
 int lastButtonState = LOW;
 long lastDebounceTime = 0;
 long debounceDelay = 50;
+long buttonDownTime = 0;
+long longPressTime = 1000;
 
 uint8_t PWR = 30; // intensity: 0..255
 
@@ -98,24 +100,48 @@ void readButtonInput() {
     if (reading != buttonState) {
       buttonState = reading;
       if (buttonState == HIGH) {
-        digitalWrite(BUTTON_LED_PIN, HIGH);
+        onButtonDown();
       } else {
-        digitalWrite(BUTTON_LED_PIN, LOW);
+        onButtonUp();
       }
+    } else if (reading == HIGH && buttonDownTime != 0) {
+       // detect longPress before buttonUp event
+       if (millis()-buttonDownTime >= longPressTime) {
+         onLongButtonPress();
+         buttonDownTime = 0;
+       }
     }
   }
-  
   
   lastButtonState = reading; 
 }
 
+void onButtonDown() {
+  buttonDownTime = millis();
+  digitalWrite(BUTTON_LED_PIN, HIGH);
+}
+
+void onButtonUp() {
+  long buttonUpTime = millis();
+  
+  if (buttonUpTime-buttonDownTime < longPressTime) {
+    onShortButtonPress();
+  }
+  
+  buttonDownTime = 0;
+  digitalWrite(BUTTON_LED_PIN, LOW);
+}
+
 void onShortButtonPress() {
-  ledState = !ledState;
-  digitalWrite(BUTTON_LED_PIN, ledState);
+   int pixels[1] = {7}; //red
+   fadeIn(pixels, 1, 1);
+   fadeOut(pixels, 1, 1);
 }
 
 void onLongButtonPress() {
-  
+   int pixels[1] = {8}; // blue
+   fadeIn(pixels, 1, 1);
+   fadeOut(pixels, 1, 1);
 }
 
 void displayOn() {
