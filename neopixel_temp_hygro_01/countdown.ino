@@ -3,9 +3,8 @@ int minutes;
 bool interrupted = false;
 
 void enterCountdownMode() {
-  //off();
   countdown_mode = true;
-  same_color_index = 0;
+  same_color_index = 2;
    // animate from 0 to 16
   for (uint8_t i = 0; i<16; i++) {  
     int pixels[1] = {i};
@@ -22,7 +21,7 @@ void enterCountdownMode() {
 }
 
 void displayMinutes() {
-  same_color_index = 5;
+  same_color_index = 2;
   for (uint8_t i = 0; i<constrain(minutes-1, 0, 16); i++) {  
     strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
   }
@@ -46,9 +45,12 @@ void onCountdownShortButtonPress() {
 
 void onCountdownLongButtonPress() {
   interrupted = true;
+  /*
+  interrupted = true;
   countdown_mode = false;
   same_color_index = -1;
   displayOn();
+  */
 }
 
 void addMinute() {

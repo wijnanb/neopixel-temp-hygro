@@ -95,6 +95,9 @@ void loop() {
 }
 
 void readButtonInput() {
+  if (!receiving_input) {
+    return;
+  }
   int reading = digitalRead(BUTTON_PIN);
   
   if (reading != lastButtonState) {
@@ -127,14 +130,14 @@ void onButtonDown() {
 }
 
 void onButtonUp() {
-  long buttonUpTime = millis();
+  digitalWrite(BUTTON_LED_PIN, LOW);
   
+  long buttonUpTime = millis();
   if (buttonUpTime-buttonDownTime < longPressTime) {
     onShortButtonPress();
   }
   
   buttonDownTime = 0;
-  digitalWrite(BUTTON_LED_PIN, LOW);
 }
 
 void onShortButtonPress() {
