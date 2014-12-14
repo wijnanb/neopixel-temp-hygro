@@ -9,6 +9,7 @@
 #define DHTTYPE DHT22   // DHT 22 temp/hygro sensor  (AM2302)
 
 #define DEMO 0
+#define TESTBEELD 0
 
 int ledState = HIGH;
 int buttonState;
@@ -63,10 +64,10 @@ uint32_t greellow = strip.Color(127, 255, 0);
 uint32_t black = strip.Color(0,0,0);
 
 uint8_t colors[16][3] = {
-  {127, 255, 0}, // temp 0: greellow
-  {127, 255, 0}, // temp 1: greellow
-  {255, 255, 0}, // temp 2: yellow
-  {255, 255, 0}, // temp 3: yellow
+  {0, 255, 255}, // temp 0: cyan
+  {0, 255, 255}, // temp 1: cyan
+  {0, 255, 0}, // temp 2: green
+  {0, 255, 0}, // temp 3: green
   {255, 127, 0}, // temp 4: orange
   {255, 127, 0}, // temp 5: orange
   {255, 0, 0},  // temp 6: red
@@ -101,7 +102,6 @@ void setup() {
   pinMode(BUTTON_LED_PIN, OUTPUT);
   pinMode(DHTPIN, INPUT);
   
-  Serial.println("DHT22 begin");
   dht.begin();
   
   strip.begin();
@@ -172,7 +172,6 @@ void onShortButtonPress() {
   if (countdown_mode) {
     onCountdownShortButtonPress();
   } else {
-    //setRandomValues();
     readFromSensor();
     displayOn();
   }
@@ -229,7 +228,7 @@ bool isHygroOn(int i) {
 
 bool isTempOn(int i) {
   i = constrain(i, 0, 7);
-  return (i < temp-18) || i == 0;
+  return (i < floor(temp)-18) || i == 0;
 }
 
 bool isOn(int i) {
@@ -249,7 +248,7 @@ bool isOn(int i) {
 void blinkActivePixelsAndDisplayOff(int duration) {
    
    uint8_t activeHygroPixel = 15 - constrain(floor((hygro-1)/10), 0, 7);
-   uint8_t activeTempPixel = constrain(floor((temp-1)-18), 0, 7);
+   uint8_t activeTempPixel = constrain((floor(temp)-1)-18, 0, 7);
    int pixels[2] = {activeHygroPixel, activeTempPixel};
    
    int cycle = 350;  
@@ -337,8 +336,13 @@ void fade(bool in, int pixels[], int numPixels, int d) {
 }
 
 void setRandomValues() {
-  hygro = random(0, 90); // 0..90
-  temp = random(180, 260) / 10; // 18.0..26.0
+  if (TESTBEELD) {
+    hygro = 90;
+    temp = 26.0;
+  } else {
+    hygro = random(0, 90); // 0..90
+    temp = random(180, 260) / 10; // 18.0..26.0
+  }
 }
 
 void readFromSensor() {

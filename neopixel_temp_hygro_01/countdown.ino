@@ -4,6 +4,7 @@ bool interrupted = false;
 bool activate_exit = false;
 bool ripple_count;
 long end_time;
+int activePixel;
 
 void enterCountdownMode() {
   countdown_mode = true;
@@ -13,39 +14,25 @@ void enterCountdownMode() {
   
   minutes = 0;
   addMinute();
-  addMinute();
-  addMinute();
-  addMinute();
+  
+  startTimer();
 }
 
 void startTimer() {
-  end_time = millis() + minutes*3*1000;
-  
-  for (uint8_t i = 0; i<constrain(minutes-1, 0, 16); i++) {  
-    strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
-  }
-  
-  
-  
-  // blink active until interrupted
-  interrupted = false;
-  activate_exit = true;
-  
-  while (!interrupted) {
-    int activePixel = constrain((minutes-1), 0, 15);
-    int blink_pixels[1] = {activePixel};
-    
-    fadeOut(blink_pixels, 1, 2);
-    delayWithInput(30);
-    fadeIn(blink_pixels, 1, 1);
-    delayWithInput(180); 
-     
-    //checkTime();
-  }
+  do {  
+     int blink_pixels[1] = {activePixel};
    
-  off();
+     fadeOut(blink_pixels, 1, 2);
+     delayWithInput(30);
+     fadeIn(blink_pixels, 1, 1);
+     delayWithInput(180);
+     
+     //checkTime();
+  } while (!interrupted);
+    
   same_color_index = -1;
   countdown_mode = false;
+  off();
 }
 
 void onCountdownShortButtonPress() {
@@ -63,7 +50,17 @@ void onCountdownLongButtonPress() {
 
 void addMinute() {
   minutes = constrain(minutes+1, 1, 16);
-  startTimer();
+  end_time = millis() + minutes*3*1000;
+  
+  for (uint8_t i = 0; i<constrain(minutes, 0, 16); i++) {  
+    strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
+  }
+  
+  // blink active until interrupted
+  interrupted = false;
+  activate_exit = true;
+  
+  activePixel = constrain((minutes-1), 0, 15);
 }
 
 void checkTime() {
