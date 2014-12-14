@@ -1,10 +1,14 @@
+#include <DHT.h>
 #include <Adafruit_NeoPixel.h>
 
+#define DHTPIN 2
 #define NEOPIXEL_INPUT 6
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
 
-#define DEMO 1
+#define DHTTYPE DHT22   // DHT 22 temp/hygro sensor  (AM2302)
+
+#define DEMO 0
 
 int ledState = HIGH;
 int buttonState;
@@ -14,7 +18,26 @@ long debounceDelay = 50;
 long buttonDownTime = 0;
 long longPressTime = 1000;
 
-uint8_t PWR = 20; // intensity: 0..255
+uint8_t PWR = 255; // intensity: 0..255
+
+
+// Connect pin 1 (on the left) of the sensor to +5V
+// NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
+// to 3.3V instead of 5V!
+// Connect pin 2 of the sensor to whatever your DHTPIN is
+// Connect pin 4 (on the right) of the sensor to GROUND
+// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+
+// Initialize DHT sensor for normal 16mhz Arduino
+DHT dht(DHTPIN, DHTTYPE);
+// NOTE: For working with a faster chip, like an Arduino Due or Teensy, you
+// might need to increase the threshold for cycle counts considered a 1 or 0.
+// You can do this by passing a 3rd parameter for this threshold.  It's a bit
+// of fiddling to find the right value, but in general the faster the CPU the
+// higher the value.  The default for a 16mhz AVR is a value of 6.  For an
+// Arduino Due that runs at 84mhz a value of 30 works.
+// Example to initialize DHT sensor for Arduino Due:
+//DHT dht(DHTPIN, DHTTYPE, 30);
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -67,7 +90,7 @@ float temp;
 
 int cycle_count;
 int same_color_index = -1;
-bool countdown_mode = true;
+bool countdown_mode = false;
 bool receiving_input = true;
 
 void setup() {
@@ -76,6 +99,10 @@ void setup() {
   
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUTTON_LED_PIN, OUTPUT);
+  pinMode(DHTPIN, INPUT);
+  
+  Serial.println("DHT22 begin");
+  dht.begin();
   
   strip.begin();
   strip.setBrightness(PWR);
@@ -145,7 +172,8 @@ void onShortButtonPress() {
   if (countdown_mode) {
     onCountdownShortButtonPress();
   } else {
-    setRandomValues();
+    //setRandomValues();
+    readFromSensor();
     displayOn();
   }
 }
@@ -311,6 +339,26 @@ void fade(bool in, int pixels[], int numPixels, int d) {
 void setRandomValues() {
   hygro = random(0, 90); // 0..90
   temp = random(180, 260) / 10; // 18.0..26.0
+}
+
+void readFromSensor() {
+  float hygro_correction = 1.15; // plus 15%
+  float temp_correction = 1.015; // plus 1.5%
+  hygro = constrain(0, round(dht.readHumidity()*hygro_correction), 90);
+  temp = constrain(18.0, dht.readTemperature()*temp_correction, 26.0);
+  
+  Serial.print("Humidity: "); 
+  Serial.print(hygro) ;
+  Serial.print(" %\t");
+  Serial.print("Temperature: "); 
+  Serial.print(temp);
+  Serial.println(" *C ");
+  
+  if (isnan(hygro) || isnan(temp)) {
+    Serial.println("Failed to read from DHT sensor!");
+    hygro = 0;
+    temp = 18.0;
+  }
 }
 
 void delayWithInput(int d) {
