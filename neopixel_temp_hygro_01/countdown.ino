@@ -3,7 +3,7 @@ int minutes;
 bool interrupted = false;
 bool activate_exit = false;
 bool ripple_count;
-long end_time;
+unsigned long end_time;
 int activePixel;
 
 void enterCountdownMode() {
@@ -48,9 +48,13 @@ void onCountdownLongButtonPress() {
   }
 }
 
+unsigned long getMillis() {
+   return (unsigned long) millis(); 
+}
+
 void addMinute() {
   minutes = constrain(minutes+1, 1, 16);
-  end_time = millis() + minutes*3*1000;
+  end_time = getMillis() + minutes*10*1000;
   
   for (uint8_t i = 0; i<constrain(minutes, 0, 16); i++) {  
     strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
@@ -64,14 +68,26 @@ void addMinute() {
 }
 
 void checkTime() {
+  Serial.print("Time: ");
+  Serial.println(getMillis());
+  
+  unsigned long time_left = end_time - getMillis(); // in miliseconds
+  
+  Serial.print("countdown: ");
+  Serial.println(time_left);
+  
   if (end_time != 0) {
-     if (end_time < millis()) {
+     if (time_left <= 0) {
         // alarm!
         end_time = 0;
         interrupted = true;
-        ripple();
+        
+        for (int i=0; i<3; i++) {
+          ripple();
+        }
      } else {
-       minutes = ceil((end_time - millis())/3*1000);
+       minutes = ceil((time_left)/(10*1000));
+       Serial.println(minutes);
      }
   }
 }
