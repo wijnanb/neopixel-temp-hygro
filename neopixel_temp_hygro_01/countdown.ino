@@ -1,5 +1,5 @@
 
-int minutes;
+unsigned long minutes;
 bool interrupted = false;
 bool activate_exit = false;
 bool ripple_count;
@@ -9,6 +9,7 @@ int activePixel;
 
 unsigned long end_time;
 unsigned long last_tick = 0;
+unsigned long factor_minutes = (unsigned long) 60*1000;
 
 void enterCountdownMode() {
   countdown_mode = true;
@@ -61,7 +62,7 @@ unsigned long getMillis() {
 
 void addMinute() {
   minutes = constrain(minutes+1, 1, 16);
-  end_time = millis() + ((unsigned long)minutes)*10*1000;
+  end_time = millis() + ((unsigned long) minutes)*factor_minutes;
   
   updateMinutes();
 }
@@ -99,7 +100,8 @@ void checkTime() {
         interrupted = true;
         alarm();        
      } else {
-       int new_minutes = ceil((time_left)/(10*1000))+1;
+       double time_left_minutes = time_left/factor_minutes;
+       int new_minutes = ceil(time_left_minutes)+1;
        
        if (new_minutes < minutes) {
          minutes = new_minutes;
