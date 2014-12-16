@@ -3,11 +3,16 @@ int minutes;
 bool interrupted = false;
 bool activate_exit = false;
 bool ripple_count;
-unsigned long end_time;
+bool alarm_interrupted = false;
+bool alarm_ringing = false;
 int activePixel;
+
+unsigned long end_time;
+unsigned long last_tick = 0;
 
 void enterCountdownMode() {
   countdown_mode = true;
+  alarm_ringing = false;
   same_color_index = random(16);
   
   ripple();
@@ -15,10 +20,10 @@ void enterCountdownMode() {
   minutes = 0;
   addMinute();
   
-  startTimer();
+  startAnimation();
 }
 
-void startTimer() {
+void startAnimation() {
   do {  
      int blink_pixels[1] = {activePixel};
    
@@ -27,7 +32,7 @@ void startTimer() {
      fadeIn(blink_pixels, 1, 1);
      delayWithInput(180);
      
-     //checkTime();
+     checkTime();
   } while (!interrupted);
     
   same_color_index = -1;
@@ -36,7 +41,9 @@ void startTimer() {
 }
 
 void onCountdownShortButtonPress() {
-  if (countdown_mode) {
+  if (alarm_ringing) {
+    alarm_interrupted = true;
+  } else {
     addMinute();
   }
 }
@@ -54,10 +61,18 @@ unsigned long getMillis() {
 
 void addMinute() {
   minutes = constrain(minutes+1, 1, 16);
-  end_time = getMillis() + minutes*10*1000;
+  end_time = millis() + ((unsigned long)minutes)*10*1000;
   
-  for (uint8_t i = 0; i<constrain(minutes, 0, 16); i++) {  
-    strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
+  updateMinutes();
+}
+
+void updateMinutes() {
+  for (uint8_t i = 0; i<16; i++) {
+    if (i<constrain(minutes, 0, 16)) {
+      strip.setPixelColor(i, strip.Color(colors[same_color_index][0], colors[same_color_index][1], colors[same_color_index][2]));
+    } else {
+      strip.setPixelColor(i, black);
+    }
   }
   
   // blink active until interrupted
@@ -68,27 +83,48 @@ void addMinute() {
 }
 
 void checkTime() {
-  Serial.print("Time: ");
-  Serial.println(getMillis());
+  unsigned long now = millis();
+  unsigned long time_left = end_time - now; // will overflow, cannot be negative
   
-  unsigned long time_left = end_time - getMillis(); // in miliseconds
-  
-  Serial.print("countdown: ");
+  Serial.print("end_time: ");
+  Serial.print(end_time);
+  Serial.print("now: ");
+  Serial.print(now);
+  Serial.print(" time_left: ");
   Serial.println(time_left);
   
   if (end_time != 0) {
-     if (time_left <= 0) {
-        // alarm!
+     if (end_time <= now) {
         end_time = 0;
         interrupted = true;
-        
-        for (int i=0; i<3; i++) {
-          ripple();
-        }
+        alarm();        
      } else {
-       minutes = ceil((time_left)/(10*1000));
-       Serial.println(minutes);
+       int new_minutes = ceil((time_left)/(10*1000))+1;
+       
+       if (new_minutes < minutes) {
+         minutes = new_minutes;
+         updateMinutes();
+         
+         Serial.println(minutes);
+         tick3();
+       } else {
+         if (last_tick == 0 || (last_tick + 1000) < now) {
+            last_tick = now;
+            tick(); 
+         }
+       }
      }
+  }
+}
+
+void alarm() {
+  alarm_ringing = true;
+  alarm_interrupted = false;
+  for (int i=0; i<10; i++) {
+    if (!alarm_interrupted) {
+      buzz();
+      ripple();
+    }
   }
 }
 

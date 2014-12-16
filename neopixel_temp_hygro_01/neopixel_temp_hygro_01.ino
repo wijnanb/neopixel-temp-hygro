@@ -2,6 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #define DHTPIN 2
+#define BUZZERPIN 3
 #define NEOPIXEL_INPUT 6
 #define BUTTON_PIN 7
 #define BUTTON_LED_PIN 13
@@ -19,7 +20,7 @@ long debounceDelay = 50;
 long buttonDownTime = 0;
 long longPressTime = 1000;
 
-uint8_t PWR = 255; // intensity: 0..255
+uint8_t PWR = 20; // intensity: 0..255
 
 
 // Connect pin 1 (on the left) of the sensor to +5V
@@ -96,11 +97,13 @@ bool receiving_input = true;
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("start");
   randomSeed(analogRead(0));
   
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUTTON_LED_PIN, OUTPUT);
   pinMode(DHTPIN, INPUT);
+  pinMode(BUZZERPIN, OUTPUT);
   
   dht.begin();
   
@@ -371,4 +374,33 @@ void delayWithInput(int d) {
      delay(1);
    } 
 }
+
+
+void buzz() {
+  for (int j=0; j<3; j++) {
+    for (int i=0; i<10; i++) {
+      digitalWrite(BUZZERPIN, HIGH);
+      delayWithInput(2);
+      digitalWrite(BUZZERPIN, LOW);
+      delayWithInput(2);
+    }
+    
+    delayWithInput(50);
+  }
+}
+
+void tick() {
+  digitalWrite(BUZZERPIN, HIGH);
+  delayWithInput(1);
+  digitalWrite(BUZZERPIN, LOW);
+}
+
+void tick3() {
+   for (int i=0; i<3; i++) {
+      tick();
+      delayWithInput(50);
+   } 
+}
+
+
 
